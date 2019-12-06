@@ -34,6 +34,8 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.query.NativeQuery;
 import org.openbravo.base.provider.OBNotSingleton;
 import org.openbravo.base.util.Check;
+import org.openbravo.base.weld.WeldUtils;
+import org.openbravo.cache.corecaches.OSPCacheManager;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
@@ -54,6 +56,8 @@ import org.openbravo.model.common.enterprise.Organization;
 public class OrganizationStructureProvider implements OBNotSingleton {
   final static Logger log = LogManager.getLogger();
 
+  private OSPCacheManager cache;
+
   private boolean isInitialized = false;
   private Map<String, OrgNode> orgNodes;
   private String clientId;
@@ -71,15 +75,22 @@ public class OrganizationStructureProvider implements OBNotSingleton {
       return;
     }
 
+    cache = WeldUtils.getInstanceFromStaticBeanManager(OSPCacheManager.class);
+
     long t = System.nanoTime();
 
     if (getClientId() == null) {
       setClientId(OBContext.getOBContext().getCurrentClient().getId());
     }
 
-    // Read all org tree of any client: bypass DAL to prevent security checks and Hibernate to make
-    // it in a single query. Using direct SQL managed by Hibernate as in this point SQLC is not
-    // allowed because this code is used while generating entities.
+    if (cache.containsKey(getClientId())) {
+      orgNodes = cache.getEntry(getClientId());
+    } else {
+
+      // Read all org tree of any client: bypass DAL to prevent security checks and Hibernate to
+      // make
+      // it in a single query. Using direct SQL managed by Hibernate as in this point SQLC is not
+      // allowed because this code is used while generating entities.
     //@formatter:off
     String sql = 
             "select n.node_id, n.parent_id, o.isready, ot.islegalentity, ot.isbusinessunit, ot.istransactionsallowed, o.isperiodcontrolallowed" +
@@ -91,24 +102,27 @@ public class OrganizationStructureProvider implements OBNotSingleton {
             "   and t.ad_client_id = :clientId";
     //@formatter:on
 
-    @SuppressWarnings("rawtypes")
-    NativeQuery qry = OBDal.getInstance()
-        .getSession()
-        .createNativeQuery(sql)
-        .setParameter("clientId", getClientId());
+      @SuppressWarnings("rawtypes")
+      NativeQuery qry = OBDal.getInstance()
+          .getSession()
+          .createNativeQuery(sql)
+          .setParameter("clientId", getClientId());
 
-    @SuppressWarnings("unchecked")
-    List<Object[]> treeNodes = qry.list();
+      @SuppressWarnings("unchecked")
+      List<Object[]> treeNodes = qry.list();
 
-    orgNodes = new HashMap<>(treeNodes.size());
-    for (Object[] nodeDef : treeNodes) {
-      final OrgNode on = new OrgNode(nodeDef);
-      String nodeId = (String) nodeDef[0];
-      orgNodes.put(nodeId, on);
-    }
+      orgNodes = new HashMap<>(treeNodes.size());
+      for (Object[] nodeDef : treeNodes) {
+        final OrgNode on = new OrgNode(nodeDef);
+        String nodeId = (String) nodeDef[0];
+        orgNodes.put(nodeId, on);
+      }
 
-    for (Entry<String, OrgNode> nodeEntry : orgNodes.entrySet()) {
-      nodeEntry.getValue().resolve(nodeEntry.getKey());
+      for (Entry<String, OrgNode> nodeEntry : orgNodes.entrySet()) {
+        nodeEntry.getValue().resolve(nodeEntry.getKey());
+      }
+
+      cache.putEntry(getClientId(), orgNodes);
     }
 
     log.debug("Client {} initialized in {} ms", getClientId(),
@@ -467,7 +481,7 @@ public class OrganizationStructureProvider implements OBNotSingleton {
     return trxAllowedOrgs;
   }
 
-  private class OrgNode {
+  public class OrgNode {
     private String parentNodeId;
     private boolean isReady;
     private boolean isLegalEntity;
