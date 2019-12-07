@@ -83,9 +83,8 @@ public class OrganizationStructureProvider implements OBNotSingleton {
       setClientId(OBContext.getOBContext().getCurrentClient().getId());
     }
 
-    if (cache.containsKey(getClientId())) {
-      orgNodes = cache.getEntry(getClientId());
-    } else {
+    orgNodes = cache.getEntry(getClientId());
+    if (orgNodes == null) {
 
       // Read all org tree of any client: bypass DAL to prevent security checks and Hibernate to
       // make
