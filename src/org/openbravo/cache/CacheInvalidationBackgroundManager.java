@@ -35,12 +35,12 @@ import javax.management.MBeanException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.criterion.Restrictions;
+import org.openbravo.base.session.OBPropertiesProvider;
 import org.openbravo.client.kernel.ApplicationInitializer;
 import org.openbravo.dal.core.OBContext;
 import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.database.SessionInfo;
-import org.openbravo.erpCommon.businessUtility.Preferences;
 import org.openbravo.jmx.MBeanRegistry;
 import org.openbravo.model.ad.system.Cache;
 
@@ -49,8 +49,8 @@ public class CacheInvalidationBackgroundManager
     implements CacheInvalidationBackgroundManagerMBean, ApplicationInitializer {
 
   private static final String CACHE_INVALIDATION_BACKGROUND_MANAGER = "Cache Invalidation Background Manager";
-  private static final String CACHE_INVALIDATION_CHECK_PERIOD_PREFERENCE = "CacheInvalidationControlPeriod";
-  private static final long DEFAULT_PERIOD = 10000; // 10 seconds
+  private static final String CACHE_INVALIDATION_CHECK_PERIOD_PROPERTY = "cache.invalidation.check.period";
+  private static final long CACHE_INVALIDATION_DEFAULT_PERIOD = 10000; // 10 seconds
 
   private static final Logger logger = LogManager.getLogger();
   public static final String CONTEXT_SYSTEM_USER = "0";
@@ -72,6 +72,23 @@ public class CacheInvalidationBackgroundManager
     }
   }
 
+  private static long getCacheInvalidationCheckPeriod() {
+    final String propertyValue = OBPropertiesProvider.getInstance()
+        .getOpenbravoProperties()
+        .getProperty(CACHE_INVALIDATION_CHECK_PERIOD_PROPERTY);
+    if (propertyValue == null) {
+      return CACHE_INVALIDATION_DEFAULT_PERIOD;
+    }
+    try {
+      return Long.parseLong(propertyValue);
+    } catch (Exception e) {
+      logger
+          .error("An invalid value was specified in the " + CACHE_INVALIDATION_CHECK_PERIOD_PROPERTY
+              + " property. The default value will be used.");
+      return CACHE_INVALIDATION_DEFAULT_PERIOD;
+    }
+  }
+
   /**
    * This method starts the cache invalidation background thread
    * 
@@ -83,13 +100,7 @@ public class CacheInvalidationBackgroundManager
       throw new MBeanException(
           new IllegalStateException("The CacheInvalidationBackgroundManager is already started"));
     }
-    try {
-      period = Long
-          .parseLong(Preferences.getPreferenceValue(CACHE_INVALIDATION_CHECK_PERIOD_PREFERENCE,
-              false, (String) null, null, null, null, null));
-    } catch (Exception e) {
-      period = DEFAULT_PERIOD;
-    }
+    period = getCacheInvalidationCheckPeriod();
     shutdownRequested = false;
     executorService = createExecutorService();
     CacheInvalidationThread thread = new CacheInvalidationThread(this, period);
@@ -158,49 +169,51 @@ public class CacheInvalidationBackgroundManager
       List<String> missingCacheManagers = new ArrayList<String>();
       boolean found;
       OBContext.setOBContext(CONTEXT_SYSTEM_USER);
-      OBContext.setAdminMode(false);
       logger.info(String.format(
           "The CacheInvalidationBackgroundManager has started. Check period is: %d ms",
           timeBetweenThreadExecutions));
-      while (true) {
-        try {
-          if (manager.shutdownRequested) {
-            return;
-          }
-          OBCriteria<Cache> cacheCriteria = OBDal.getInstance().createCriteria(Cache.class);
-          cacheCriteria.add(Restrictions.isNotNull(Cache.PROPERTY_LASTINVALIDATION));
-          if (!missingCacheManagers.isEmpty()) {
-            cacheCriteria.add(
-                Restrictions.not(Restrictions.in(Cache.PROPERTY_SEARCHKEY, missingCacheManagers)));
-          }
-          List<Cache> cacheList = cacheCriteria.list();
-          for (Cache cache : cacheList) {
-            found = false;
-            Instance<CacheManager<?, ?>> qualifiedCacheManagers = manager.cacheManagers
-                .select(new CacheManager.Selector(cache.getSearchKey()));
-            for (CacheManager<?, ?> cacheManager : qualifiedCacheManagers) {
-              cacheManager.invalidateIfExpired(cache.getLastInvalidation());
-              found = true;
-            }
-            if (!found) {
-              missingCacheManagers.add(cache.getSearchKey());
-              logger.error("The CacheManager for " + cache.getSearchKey()
-                  + " was not injected into the CacheInvalidationBackgroundManager");
-            }
-          }
-          OBDal.getInstance().getSession().clear();
-          OBDal.getInstance().commitAndClose();
-          SessionInfo.init();
+      try {
+        OBContext.setAdminMode(false);
+        while (true) {
           try {
-            Thread.sleep(timeBetweenThreadExecutions);
-          } catch (Exception ignored) {
-            break;
+            if (manager.shutdownRequested) {
+              return;
+            }
+            OBCriteria<Cache> cacheCriteria = OBDal.getInstance().createCriteria(Cache.class);
+            cacheCriteria.add(Restrictions.isNotNull(Cache.PROPERTY_LASTINVALIDATION));
+            if (!missingCacheManagers.isEmpty()) {
+              cacheCriteria.add(Restrictions
+                  .not(Restrictions.in(Cache.PROPERTY_SEARCHKEY, missingCacheManagers)));
+            }
+            List<Cache> cacheList = cacheCriteria.list();
+            for (Cache cache : cacheList) {
+              found = false;
+              Instance<CacheManager<?, ?>> qualifiedCacheManagers = manager.cacheManagers
+                  .select(new CacheManager.Selector(cache.getSearchKey()));
+              for (CacheManager<?, ?> cacheManager : qualifiedCacheManagers) {
+                cacheManager.invalidateIfExpired(cache.getLastInvalidation());
+                found = true;
+              }
+              if (!found) {
+                missingCacheManagers.add(cache.getSearchKey());
+                logger.error("The CacheManager for " + cache.getSearchKey()
+                    + " was not injected into the CacheInvalidationBackgroundManager");
+              }
+            }
+            OBDal.getInstance().getSession().clear();
+            OBDal.getInstance().commitAndClose();
+            SessionInfo.init();
+            try {
+              Thread.sleep(timeBetweenThreadExecutions);
+            } catch (Exception ignored) {
+              break;
+            }
+          } catch (Throwable e) {
+            logger.error(e.getMessage(), e);
           }
-        } catch (Throwable e) {
-          logger.error(e.getMessage(), e);
-        } finally {
-          OBContext.restorePreviousMode();
         }
+      } finally {
+        OBContext.restorePreviousMode();
       }
     }
 
