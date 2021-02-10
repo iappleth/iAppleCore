@@ -29,7 +29,7 @@ import org.openbravo.database.ConnectionProvider;
 
 public class AddSintMaartenAndCuracao extends ModuleScript {
 
-  //This module script has ben created due to issue 45763
+  //This module script has been created due to issue 45763
   @Override
   public void execute() {
     try {
@@ -45,7 +45,7 @@ public class AddSintMaartenAndCuracao extends ModuleScript {
   @Override
   protected ModuleScriptExecutionLimits getModuleScriptExecutionLimits() {
     return new ModuleScriptExecutionLimits("0", null, 
-        new OpenbravoVersion(3,0,204901));
+        new OpenbravoVersion(3,0,212000));
   }
   
   @Override
