@@ -19,18 +19,11 @@
 -->
 <SqlClass name="AddSintMaartenAndCuracaoData" package="org.openbravo.modulescript">
   <SqlClassComment></SqlClassComment>
-  
-  <SqlMethod name="select" type="preparedStatement" return="multiple">
-    <SqlMethodComment></SqlMethodComment>
-    <Sql><![CDATA[
-      SELECT '' as ad_client_id FROM DUAL
-      ]]>
-    </Sql>
-  </SqlMethod>
+ 
   <SqlMethod name="deactivateNetherlandAntilles" type="preparedStatement" return="rowcount">
     <SqlMethodComment></SqlMethodComment>
     <Sql><![CDATA[
-        UPDATE c_country SET isactive='N' WHERE c_country_id='260'
+        UPDATE c_country SET isactive='N' WHERE c_country_id='260' AND isactive='Y'
       ]]>
     </Sql>
   </SqlMethod>
