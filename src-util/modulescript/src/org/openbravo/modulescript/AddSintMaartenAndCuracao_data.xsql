@@ -19,7 +19,13 @@
 -->
 <SqlClass name="AddSintMaartenAndCuracaoData" package="org.openbravo.modulescript">
   <SqlClassComment></SqlClassComment>
- 
+  <SqlMethod name="select" type="preparedStatement" return="multiple">
+    <SqlMethodComment></SqlMethodComment>
+    <Sql><![CDATA[
+      SELECT '' as ad_client_id FROM DUAL
+      ]]>
+    </Sql>
+  </SqlMethod>
   <SqlMethod name="deactivateNetherlandAntilles" type="preparedStatement" return="rowcount">
     <SqlMethodComment></SqlMethodComment>
     <Sql><![CDATA[
@@ -34,7 +40,7 @@
 	        c_country_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, 
 	        name, description, countrycode, hasregion, regionname, displaysequence, 
 	        haspostal_add, isdefault, c_currency_id)
-	    SELECT '56589EEE91534A9C8AA2DDF487EF542D', '0', '0', 'Y', 'now()', '0', 'now()', '0',
+	    SELECT '56589EEE91534A9C8AA2DDF487EF542D', '0', '0', 'Y', now(), '0', now(), '0',
 	        'Sint Maarten', 'Sint Maarten', 'SX', 'N', 'State', '@C@,  @P@', 
 	        'N', 'N', '284'
 	    FROM DUAL
@@ -50,7 +56,7 @@
 			c_country_id, ad_client_id, ad_org_id, isactive, created, createdby, updated, updatedby, 
 			name, description, countrycode, hasregion, regionname, displaysequence, 
 			haspostal_add, isdefault, c_currency_id)
-		SELECT '911EFDC31736411FB27977333E9D2F35', '0', '0', 'Y', 'now()', '0', 'now()', '0',
+		SELECT '911EFDC31736411FB27977333E9D2F35', '0', '0', 'Y', now(), '0', now(), '0',
 			'Curaçao', 'Curaçao', 'CW', 'N', 'State', '@C@,  @P@', 
 			'N', 'N', '284'
 		FROM DUAL
