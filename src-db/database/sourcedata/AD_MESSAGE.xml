@@ -20557,7 +20557,7 @@ You can upgrade the license of your instance by contacting Openbravo sales staff
 <!--62EFB05DD99D4CCB83E5DA567A379E65-->  <AD_ORG_ID><![CDATA[0]]></AD_ORG_ID>
 <!--62EFB05DD99D4CCB83E5DA567A379E65-->  <ISACTIVE><![CDATA[Y]]></ISACTIVE>
 <!--62EFB05DD99D4CCB83E5DA567A379E65-->  <VALUE><![CDATA[ManageVariantsLimitReached]]></VALUE>
-<!--62EFB05DD99D4CCB83E5DA567A379E65-->  <MSGTEXT><![CDATA[The number of records (%s) is too high. Please, either try to review and reduce the number of product characteristics or alternatively set the ManageVariantsLimit preference to a higher value than %s]]></MSGTEXT>
+<!--62EFB05DD99D4CCB83E5DA567A379E65-->  <MSGTEXT><![CDATA[The number of records is too high. Please, either try to review and reduce the number of product characteristics or alternatively set the ManageVariantsLimit preference to a higher value.]]></MSGTEXT>
 <!--62EFB05DD99D4CCB83E5DA567A379E65-->  <MSGTYPE><![CDATA[E]]></MSGTYPE>
 <!--62EFB05DD99D4CCB83E5DA567A379E65-->  <AD_MODULE_ID><![CDATA[0]]></AD_MODULE_ID>
 <!--62EFB05DD99D4CCB83E5DA567A379E65-->  <ISINCLUDEINI18N><![CDATA[Y]]></ISINCLUDEINI18N>
