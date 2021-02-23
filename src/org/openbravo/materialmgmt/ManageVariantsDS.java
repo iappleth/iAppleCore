@@ -46,6 +46,7 @@ import org.openbravo.dal.service.OBCriteria;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.dal.service.OBQuery;
 import org.openbravo.erpCommon.businessUtility.Preferences;
+import org.openbravo.erpCommon.utility.OBMessageUtils;
 import org.openbravo.model.ad.domain.Reference;
 import org.openbravo.model.common.plm.Characteristic;
 import org.openbravo.model.common.plm.CharacteristicValue;
@@ -146,18 +147,12 @@ public class ManageVariantsDS extends ReadOnlyDataSourceService {
         i++;
       }
 
-      OBContext context = OBContext.getOBContext();
-      int manageVariantsMaxResults = -1;
-      try {
-        manageVariantsMaxResults = Integer.parseInt(
-            Preferences.getPreferenceValue("ManageVariantsLimit", false, context.getCurrentClient(),
-                context.getCurrentOrganization(), context.getUser(), context.getRole(), null));
-      } catch (Exception e) {
-        manageVariantsMaxResults = 1000;
-      }
-
+      int manageVariantsMaxResults = getManageVariantsLimitPrefValue();
       if (variantNumber > manageVariantsMaxResults) {
-        throw new OBException("HighRecords");
+        final String errorMessage = String.format(
+            OBMessageUtils.messageBD("ManageVariantsLimitReached"), variantNumber,
+            manageVariantsMaxResults);
+        throw new OBException(errorMessage);
       }
       totalMaxLength += Long.toString(variantNumber).length();
       boolean useCodes = totalMaxLength <= SEARCH_KEY_LENGTH;
@@ -305,6 +300,17 @@ public class ManageVariantsDS extends ReadOnlyDataSourceService {
       OBContext.restorePreviousMode();
     }
     return result;
+  }
+
+  private int getManageVariantsLimitPrefValue() {
+    try {
+      OBContext context = OBContext.getOBContext();
+      return Integer.parseInt(
+          Preferences.getPreferenceValue("ManageVariantsLimit", false, context.getCurrentClient(),
+              context.getCurrentOrganization(), context.getUser(), context.getRole(), null));
+    } catch (Exception e) {
+      return 1000;
+    }
   }
 
   private ProductChSelectedFilters readCriteria(Map<String, String> parameters)
