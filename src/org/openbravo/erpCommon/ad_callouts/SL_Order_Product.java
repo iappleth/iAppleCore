@@ -11,7 +11,7 @@
  * under the License. 
  * The Original Code is Openbravo ERP. 
  * The Initial Developer of the Original Code is Openbravo SLU 
- * All portions are Copyright (C) 2001-2017 Openbravo SLU 
+ * All portions are Copyright (C) 2001-2021 Openbravo SLU 
  * All Rights Reserved. 
  * Contributor(s):  ______________________________________.
  ************************************************************************
@@ -160,7 +160,8 @@ public class SL_Order_Product extends SimpleCallout {
         try {
           String strCTaxID = Tax.get(this, strMProductID, data[0].dateordered, strADOrgID,
               strMWarehouseID,
-              (StringUtils.isEmpty(data[0].billtoId) ? strCBPartnerLocationID : data[0].billtoId),
+              (StringUtils.isEmpty(strCBPartnerLocationID) ? data[0].billtoId
+                  : strCBPartnerLocationID),
               strCBPartnerLocationID, data[0].cProjectId, StringUtils.equals(strIsSOTrx, "Y"),
               StringUtils.equals(data[0].iscashvat, "Y"));
           info.addResult("inpcTaxId", strCTaxID);
