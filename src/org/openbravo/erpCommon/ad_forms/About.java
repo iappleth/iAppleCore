@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.inject.Inject;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -40,14 +41,19 @@ import org.openbravo.erpCommon.obps.ActivationKey;
 import org.openbravo.erpCommon.utility.FieldProviderFactory;
 import org.openbravo.erpCommon.utility.OBVersion;
 import org.openbravo.erpCommon.utility.Utility;
+import org.openbravo.service.importprocess.ImportEntryManager;
 import org.openbravo.xmlEngine.XmlDocument;
 
 public class About extends HttpSecureAppServlet {
   private static final long serialVersionUID = 1L;
 
+  @Inject
+  ImportEntryManager iem;
+
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response)
       throws IOException, ServletException {
+    System.out.println(iem.toString());
     VariablesSecureApp vars = new VariablesSecureApp(request);
 
     if (vars.commandIn("DEFAULT")) {

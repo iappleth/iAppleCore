@@ -27,6 +27,7 @@ import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -122,6 +123,17 @@ public abstract class ImportEntryProcessor {
    * {@link ImportEntryManager#shutdown()}.
    */
   public void shutdown() {
+  }
+
+  @Override
+  public String toString() {
+    return getClass().getSimpleName() + "\n"
+        + (runnables.isEmpty() ? " No runnables"
+            : runnables.entrySet()
+                .stream()
+                .map(e -> " " + e.getKey() + "\n" + e.getValue())
+                .collect(Collectors.joining("\n")));
+
   }
 
   /**
@@ -277,6 +289,9 @@ public abstract class ImportEntryProcessor {
     // when the garbagecollector runs
     private Map<String, OBContext> cachedOBContexts = new HashMap<>();
 
+    private String currentProcessingEntry;
+    private long currentProcessingEntryStarted;
+
     public ImportEntryProcessRunnable() {
       logger = LogManager.getLogger();
     }
@@ -330,6 +345,16 @@ public abstract class ImportEntryProcessor {
       }
     }
 
+    @Override
+    public String toString() {
+      String currentProcessing = currentProcessingEntry == null ? "none"
+          : (currentProcessingEntry + " - "
+              + (System.currentTimeMillis() - currentProcessingEntryStarted) + "ms");
+      return "   processing: " + currentProcessing + "\n" + //
+          "   queu: (" + importEntries.size() + ") - " + importEntries + "\n" + //
+          "   ids: (" + importEntryIds.size() + ") - " + importEntryIds;
+    }
+
     protected void doRunCycle() {
       int cnt = 0;
       long totalT = 0;
@@ -340,6 +365,9 @@ public abstract class ImportEntryProcessor {
             return;
           }
           final long t0 = System.currentTimeMillis();
+
+          currentProcessingEntry = queuedImportEntry.importEntryId;
+          currentProcessingEntryStarted = System.currentTimeMillis();
 
           // set the same obcontext as was being used for the original
           // entry
@@ -513,6 +541,7 @@ public abstract class ImportEntryProcessor {
     protected void cleanUpThreadForNextCycle() {
       OBContext.setOBContext((OBContext) null);
       RequestContext.get().setVariableSecureApp(null);
+      currentProcessingEntry = null;
     }
 
     /**
@@ -587,6 +616,11 @@ public abstract class ImportEntryProcessor {
           roleId = null;
         }
         clientId = importEntry.getClient().getId();
+      }
+
+      @Override
+      public String toString() {
+        return importEntryId;
       }
     }
   }
