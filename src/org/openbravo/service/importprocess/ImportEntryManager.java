@@ -32,6 +32,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
@@ -387,6 +388,14 @@ public class ImportEntryManager {
       }
     }
     return importEntryProcessor;
+  }
+
+  @Override
+  public String toString() {
+    return importEntryProcessors.entrySet()
+        .stream()
+        .map(e -> e.getKey() + " - " + e.getValue())
+        .collect(Collectors.joining("\n"));
   }
 
   public void handleImportError(ImportEntry importEntry, Throwable t) {
