@@ -188,7 +188,7 @@ build.war: build a war file in the lib directory.
 	-->
   <target name="generate.entities.quick" depends="compile.src.gen">
     <java classname="org.openbravo.base.gen.GenerateEntitiesTask" fork="yes" jvm="${env.JAVA_HOME}/bin/java" maxmemory="${build.maxmemory}" failonerror="true">
-      <arg line="'${base.src}' '${friendlyWarnings}'" />
+      <arg line="'${base.src}' ${base.src.gen} ${base.config}/Openbravo.properties" />
       <classpath refid="project.class.path" />
       <syspropertyset>
          <propertyref name="java.security.egd" />
@@ -202,20 +202,21 @@ build.war: build a war file in the lib directory.
         <classpath refid="project.class.path" />      
       </javac>
       -->
-      <javac srcdir="${base.src}:${base.src.gen}:${base.modules}" includes="org/openbravo/model/**,org/openbravo/base/structure/**,org/openbravo/dal/**,org/openbravo/service/dataset/**,*/src/**/base/weld/**" destdir="${build}" encoding="UTF-8" fork="true" memorymaximumsize="${build.maxmemory}" debug="true" debuglevel="lines,vars,source" deprecation="on" includeantruntime="false">
-        <classpath refid="project.class.path" />
-        <compilerarg value="-implicit:class" />
-      </javac>
+    <javac includes="org/openbravo/model/**,org/openbravo/base/structure/**,org/openbravo/dal/**,org/openbravo/service/dataset/**,*/src/**/base/weld/**" destdir="${build}" encoding="UTF-8" fork="true" memorymaximumsize="${build.maxmemory}" debug="true" debuglevel="lines,vars,source" deprecation="on" includeantruntime="false">
+      <src>
+        <pathelement path="${base.src}"/>
+        <pathelement path="${base.src.gen}"/>
+        <dirset dir="${base.modules}">
+          <include name="*/src" />
+        </dirset>
+      </src>
+      <classpath refid="project.class.path" />
+      <compilerarg value="-implicit:class" />
+    </javac>
       <javac srcdir="${base.src.gen}" excludes="org/openbravo/model/**,org/openbravo/base/structure/**,org/openbravo/dal/**,org/openbravo/service/dataset/**" destdir="${build}" encoding="UTF-8" fork="true" memorymaximumsize="${build.maxmemory}" debug="true" debuglevel="lines,vars,source" deprecation="on" includeantruntime="false">
         <classpath refid="project.class.path" />
       </javac>
   </target>
-
-  <!-- build-internal forking helper -->
-  <target name="generate.entities.quick.forked" depends="compile.src.gen">
-    <taskdef name="workflow" classpathref="project.class.path" classname="org.openbravo.base.gen.GenerateEntitiesTask" />
-    <workflow friendlyWarnings="${friendlyWarnings}" srcGenPath="${base.src.gen}" propertiesFile="${base.config}/Openbravo.properties" />
-  </target> 
 
   <path id="my-src-dirs">
     <pathelement path="${basedir}" />
@@ -254,7 +255,12 @@ build.war: build a war file in the lib directory.
     </copy>
     
     <!-- also compile the domaintypes in modules -->
-    <javac srcdir="${basedir}/../" includes="modules/*/src/**/model/domaintype/**/*.java" destdir="${build}"  fork="true" deprecation="on" encoding="UTF-8" debug="true" debuglevel="lines,vars,source" includeantruntime="false">
+    <javac includes="**/model/domaintype/**/*.java" destdir="${build}"  fork="true" deprecation="on" encoding="UTF-8" debug="true" debuglevel="lines,vars,source" includeantruntime="false">
+      <src>
+        <dirset dir="${base.modules}">
+          <include name="*/src" />
+        </dirset>
+      </src>
       <classpath refid="project.class.path" />
     </javac>
     
