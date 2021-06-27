@@ -23,7 +23,6 @@ import java.math.BigDecimal;
 
 import javax.enterprise.context.Dependent;
 
-import org.apache.commons.lang.StringUtils;
 import org.hibernate.criterion.Restrictions;
 import org.openbravo.base.structure.BaseOBObject;
 import org.openbravo.client.kernel.ComponentProvider.Qualifier;
@@ -189,9 +188,6 @@ class UpdateInvoiceLineInformation extends CreateLinesFromProcessHook {
     if (processingOrder != null) {
       boolean isMultiOrderInvoice = existsOtherOrdersLinkedToThisInvoice(processingOrder);
       getInvoice().setSalesOrder(isMultiOrderInvoice ? null : processingOrder);
-		if (!isMultiOrderInvoice && StringUtils.isEmpty(getInvoice().getOrderReference())) {
-			getInvoice().setOrderReference(isMultiOrderInvoice ? null : processingOrder.getOrderReference());
-      }
     }
   }
 
