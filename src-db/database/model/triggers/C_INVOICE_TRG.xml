@@ -121,24 +121,24 @@ BEGIN
   -- Syncs the poReference from the C_Order_Id only if not manually set by the user
   IF (UPDATING) THEN
     IF (COALESCE(:OLD.C_ORDER_ID, '.') <> COALESCE(:NEW.C_ORDER_ID, '.')) THEN
-        IF (:OLD.C_ORDER_ID IS NOT NULL) THEN
-          SELECT poreference INTO v_OldOrderPORef FROM C_ORDER WHERE C_ORDER_ID = :OLD.C_ORDER_ID;
+      IF (:OLD.C_ORDER_ID IS NOT NULL) THEN
+        SELECT poreference INTO v_OldOrderPORef FROM C_ORDER WHERE C_ORDER_ID = :OLD.C_ORDER_ID;
+      END IF;
+
+      IF(COALESCE(:NEW.POREFERENCE, v_OldOrderPORef, '.') = COALESCE(v_OldOrderPORef, '.')) THEN
+        IF (:NEW.C_ORDER_ID IS NULL ) THEN
+          :NEW.POREFERENCE := NULL;
+        ELSE
+          SELECT poreference INTO v_newOrderPORef FROM C_ORDER WHERE C_ORDER_ID = :NEW.C_ORDER_ID;
+          :NEW.POREFERENCE := v_newOrderPORef;
         END IF;
-		
-        IF(COALESCE(:NEW.POREFERENCE, v_OldOrderPORef, '.') = COALESCE(v_OldOrderPORef, '.')) THEN   
-		  IF (:NEW.C_ORDER_ID IS NULL ) THEN
-			:NEW.POREFERENCE := NULL;
-		  ELSE		
-			SELECT poreference INTO v_newOrderPORef FROM C_ORDER WHERE C_ORDER_ID = :NEW.C_ORDER_ID;
-			:NEW.POREFERENCE := v_newOrderPORef;
-		  END IF;
-        END IF;
+      END IF;
     END IF;
   END IF;
   IF (INSERTING) THEN
     IF (:NEW.C_ORDER_ID IS NOT NULL AND :NEW.POREFERENCE IS NULL) THEN	
-        SELECT poreference INTO v_newOrderPORef FROM C_ORDER WHERE C_ORDER_ID = :NEW.C_ORDER_ID;
-        :NEW.POREFERENCE := v_newOrderPORef;
+      SELECT poreference INTO v_newOrderPORef FROM C_ORDER WHERE C_ORDER_ID = :NEW.C_ORDER_ID;
+      :NEW.POREFERENCE := v_newOrderPORef;
     END IF;
   END IF;
 END C_INVOICE_TRG
