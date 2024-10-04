@@ -255,6 +255,24 @@ public class FIN_Utility {
    * @return the Document Type
    */
   public static DocumentType getDocumentType(Organization org, String docCategory) {
+    return getDocumentType(org, docCategory, null);
+  }
+
+  /**
+   * Returns the DocumentType defined for the Organization (or parent organization tree) and
+   * document category.
+   * 
+   * @param org
+   *          the Organization for which the Document Type is defined. The Document Type can belong
+   *          to the parent organization tree of the specified Organization.
+   * @param docCategory
+   *          the document category of the Document Type.
+   * @param isReturn
+   *          return value of the Document Type
+   * @return the Document Type
+   */
+  public static DocumentType getDocumentType(Organization org, String docCategory,
+      Boolean isReturn) {
     Client client = null;
     if ("0".equals(org.getId())) {
       client = OBContext.getOBContext().getCurrentClient();
@@ -268,12 +286,15 @@ public class FIN_Utility {
     OBContext.setAdminMode(false);
     try {
       // @formatter:off
-      final String where = ""
+      String where = ""
           + " as dt"
           + " where dt.organization.id in (:orgIdList)"
           + "   and dt.client.id = :clientId"
-          + "   and dt.documentCategory = :docCategory"
-          + " order by ad_isorgincluded(:orgId, dt.organization.id, :clientId)"
+          + "   and dt.documentCategory = :docCategory";
+      if (isReturn!=null) {
+      where = where  + "   and dt.return =:return";
+      }
+      where = where   + " order by ad_isorgincluded(:orgId, dt.organization.id, :clientId)"
           + "   , dt.default desc"
           + "   , dt.id desc";
 
@@ -289,7 +310,9 @@ public class FIN_Utility {
       dt.setNamedParameter("clientId", client.getId());
       dt.setNamedParameter("docCategory", docCategory);
       dt.setNamedParameter("orgId", org.getId());
-
+      if (isReturn != null) {
+        dt.setNamedParameter("return", isReturn);
+      }
       return dt.uniqueResult();
     } finally {
       OBContext.restorePreviousMode();
