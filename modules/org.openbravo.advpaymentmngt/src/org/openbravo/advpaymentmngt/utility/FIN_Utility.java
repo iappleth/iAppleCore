@@ -245,7 +245,7 @@ public class FIN_Utility {
 
   /**
    * Returns the DocumentType defined for the Organization (or parent organization tree) and
-   * document category.
+   * document category. It could return any type (return or not)
    * 
    * @param org
    *          the Organization for which the Document Type is defined. The Document Type can belong
@@ -255,23 +255,41 @@ public class FIN_Utility {
    * @return the Document Type
    */
   public static DocumentType getDocumentType(Organization org, String docCategory) {
-    return getDocumentType(org, docCategory, null);
+    return getAllDocumentTypes(org, docCategory, null);
   }
 
   /**
-   * Returns the DocumentType defined for the Organization (or parent organization tree) and
-   * document category.
+   * Returns the DocumentType type returns defined for the Organization (or parent organization
+   * tree) and document category.
    * 
    * @param org
    *          the Organization for which the Document Type is defined. The Document Type can belong
    *          to the parent organization tree of the specified Organization.
    * @param docCategory
    *          the document category of the Document Type.
-   * @param isReturn
-   *          return value of the Document Type
+   * 
    * @return the Document Type
    */
-  public static DocumentType getDocumentType(Organization org, String docCategory,
+  public static DocumentType getReturnDocumentType(Organization org, String docCategory) {
+    return getAllDocumentTypes(org, docCategory, true);
+  }
+
+  /**
+   * Returns the DocumentType regular type defined for the Organization (or parent organization
+   * tree) and document category. It could return any type (return or not)
+   * 
+   * @param org
+   *          the Organization for which the Document Type is defined. The Document Type can belong
+   *          to the parent organization tree of the specified Organization.
+   * @param docCategory
+   *          the document category of the Document Type.
+   * @return the Document Type
+   */
+  public static DocumentType getRegularDocumentType(Organization org, String docCategory) {
+    return getAllDocumentTypes(org, docCategory, false);
+  }
+
+  private static DocumentType getAllDocumentTypes(Organization org, String docCategory,
       Boolean isReturn) {
     Client client = null;
     if ("0".equals(org.getId())) {
@@ -285,20 +303,14 @@ public class FIN_Utility {
 
     OBContext.setAdminMode(false);
     try {
-      // @formatter:off
-      String where = ""
-          + " as dt"
-          + " where dt.organization.id in (:orgIdList)"
-          + "   and dt.client.id = :clientId"
-          + "   and dt.documentCategory = :docCategory";
-      if (isReturn!=null) {
-      where = where  + "   and dt.return =:return";
+      String where = "" + " as dt" + " where dt.organization.id in (:orgIdList)"
+          + "   and dt.client.id = :clientId" + "   and dt.documentCategory = :docCategory";
+      if (isReturn != null) {
+        where = where + "   and dt.return =:return";
       }
-      where = where   + " order by ad_isorgincluded(:orgId, dt.organization.id, :clientId)"
-          + "   , dt.default desc"
-          + "   , dt.id desc";
+      where = where + " order by ad_isorgincluded(:orgId, dt.organization.id, :clientId)"
+          + "   , dt.default desc" + "   , dt.id desc";
 
-      // @formatter:on
       OBQuery<DocumentType> dt = OBDal.getInstance().createQuery(DocumentType.class, where);
       dt.setFilterOnReadableClients(false);
       dt.setFilterOnReadableOrganization(false);
@@ -313,6 +325,7 @@ public class FIN_Utility {
       if (isReturn != null) {
         dt.setNamedParameter("return", isReturn);
       }
+
       return dt.uniqueResult();
     } finally {
       OBContext.restorePreviousMode();
