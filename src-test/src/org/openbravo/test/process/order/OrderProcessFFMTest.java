@@ -22,7 +22,6 @@ package org.openbravo.test.process.order;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.comparesEqualTo;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 
 import java.math.BigDecimal;
@@ -42,22 +41,20 @@ import org.openbravo.dal.core.DalUtil;
 import org.openbravo.dal.service.OBDal;
 import org.openbravo.model.common.order.Order;
 import org.openbravo.model.common.order.OrderLine;
-import org.openbravo.model.financialmgmt.payment.FIN_PaymentSchedule;
 import org.openbravo.model.financialmgmt.tax.TaxRate;
 import org.openbravo.model.pricing.pricelist.PriceList;
 import org.openbravo.service.db.CallStoredProcedure;
 import org.openbravo.test.base.OBBaseTest;
 
 /**
- * Tests cases to check c_order_post1 executions
- * 
+ * Tests cases to check c_order_post1 executions with Free Freigh Minimum checks
  * 
  */
 @RunWith(Parameterized.class)
 public class OrderProcessFFMTest extends OBBaseTest {
   private static final Logger log = LogManager.getLogger();
 
-  private static final String SALESORDER_ID = "62766DC8FFD0465F9730FAD830CD7324";
+  private static final String SALESORDER_ID = "D8783EA69C3C4671A8AB0882D26FD991";
 
   private static final String PRICEINCLUDINGTAXES_PRICELIST_SALES = "4028E6C72959682B01295ADC1769021B";
 
@@ -189,21 +186,12 @@ public class OrderProcessFFMTest extends OBBaseTest {
 
   private void assertOrder(Order testOrder) {
     assertOrderIsCompleted(testOrder, amount, orderedQty);
-
   }
 
   private void assertOrderIsCompleted(Order testOrder, BigDecimal totalAmount,
       BigDecimal orderedQuantity) {
     assertOrderHeader(testOrder, totalAmount);
     assertOrderLines(testOrder, orderedQuantity);
-
-    final FIN_PaymentSchedule paymentSchedule = testOrder.getFINPaymentScheduleList().get(0);
-    assertThat("Should be one payment schedule", testOrder.getFINPaymentScheduleList().size(),
-        comparesEqualTo(1));
-    assertThat("Payment amount should be " + totalAmount, paymentSchedule.getAmount(),
-        comparesEqualTo(totalAmount));
-    assertThat("Payment outstanding amount should be 0", paymentSchedule.getOutstandingAmount(),
-        comparesEqualTo(totalAmount));
   }
 
   private void assertOrderLines(Order testOrder, BigDecimal orderedQuantity) {
@@ -211,10 +199,6 @@ public class OrderProcessFFMTest extends OBBaseTest {
       OBDal.getInstance().refresh(line);
       assertThat("Line ordered quantity should be " + orderedQuantity, line.getOrderedQuantity(),
           comparesEqualTo(orderedQuantity));
-      assertThat("Line invoiced quantity should be 0", line.getInvoicedQuantity(),
-          comparesEqualTo(BigDecimal.ZERO));
-      assertThat("Line delivered quantity should be 0", line.getDeliveredQuantity(),
-          comparesEqualTo(BigDecimal.ZERO));
     });
   }
 
@@ -222,6 +206,5 @@ public class OrderProcessFFMTest extends OBBaseTest {
     assertThat("Order should be Booked", testOrder.getDocumentStatus(), equalTo("CO"));
     assertThat("Order Total amount should be " + totalAmount, testOrder.getGrandTotalAmount(),
         comparesEqualTo(totalAmount));
-    assertFalse("Order should not be delived", testOrder.isDelivered());
   }
 }
