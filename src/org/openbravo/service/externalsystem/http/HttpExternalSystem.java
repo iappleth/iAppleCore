@@ -72,7 +72,6 @@ public class HttpExternalSystem extends ExternalSystem implements Cacheable {
   private int timeout;
   private HttpClient client;
   private HttpAuthorizationProvider authorizationProvider;
-  private String id;
 
   @Inject
   @Any
@@ -82,13 +81,12 @@ public class HttpExternalSystem extends ExternalSystem implements Cacheable {
   public void configure(ExternalSystemData configuration) {
     super.configure(configuration);
 
-    id = configuration.getId();
     HttpExternalSystemData httpConfig = configuration.getExternalSystemHttpList()
         .stream()
         .filter(HttpExternalSystemData::isActive)
         .findFirst()
         .orElseThrow(() -> new ExternalSystemConfigurationError(
-            "No HTTP configuration found for external system with ID " + id));
+            "No HTTP configuration found for external system with ID " + getId()));
 
     url = httpConfig.getURL();
     requestMethod = httpConfig.getRequestMethod();
@@ -345,6 +343,6 @@ public class HttpExternalSystem extends ExternalSystem implements Cacheable {
 
   @Override
   public String toString() {
-    return "[" + id + "] " + url;
+    return super.toString() + " " + url;
   }
 }
