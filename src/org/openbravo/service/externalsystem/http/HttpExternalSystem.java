@@ -72,6 +72,7 @@ public class HttpExternalSystem extends ExternalSystem implements Cacheable {
   private int timeout;
   private HttpClient client;
   private HttpAuthorizationProvider authorizationProvider;
+  private String id;
 
   @Inject
   @Any
@@ -81,12 +82,13 @@ public class HttpExternalSystem extends ExternalSystem implements Cacheable {
   public void configure(ExternalSystemData configuration) {
     super.configure(configuration);
 
+    id = configuration.getId();
     HttpExternalSystemData httpConfig = configuration.getExternalSystemHttpList()
         .stream()
         .filter(HttpExternalSystemData::isActive)
         .findFirst()
         .orElseThrow(() -> new ExternalSystemConfigurationError(
-            "No HTTP configuration found for external system with ID " + configuration.getId()));
+            "No HTTP configuration found for external system with ID " + id));
 
     url = httpConfig.getURL();
     requestMethod = httpConfig.getRequestMethod();
@@ -339,5 +341,10 @@ public class HttpExternalSystem extends ExternalSystem implements Cacheable {
     // We do not need to manually close anything here because the resources are automatically
     // released when the HttpClient is no longer referenced. This should happen when this instance
     // is invalidated from the ExternalSystemProvider cache.
+  }
+
+  @Override
+  public String toString() {
+    return "[" + id + "] " + url;
   }
 }
