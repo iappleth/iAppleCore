@@ -298,8 +298,8 @@ public class FIN_Utility {
   }
 
   /**
-   * Returns the DocumentType type not returns defined for the Organization (or parent organization
-   * tree) and document category.
+   * Returns the regular DocumentType type (not return) defined for the Organization (or parent
+   * organization tree) and document category.
    * 
    * @param org
    *          the Organization for which the Document Type is defined. The Document Type can belong
