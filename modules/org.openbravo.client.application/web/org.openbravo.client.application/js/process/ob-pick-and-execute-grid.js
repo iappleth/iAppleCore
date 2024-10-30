@@ -1020,6 +1020,16 @@ isc.OBPickAndExecuteGrid.addProperties({
     editField.setValueMap(map);
   },
 
+  getEditorValueMap: function(field, values) {
+    if (this.getEditForm() && this.getEditForm().getField(field.name)) {
+      const liveField = this.getEditForm().getField(field.name);
+      if (liveField.valueMap) {
+        return liveField.valueMap;
+      }
+    }
+    return this.Super('getEditorValueMap', arguments);
+  },
+
   processColumnValue: function(rowNum, columnName, columnValue) {
     var field,
       valueMap = [];
@@ -1032,6 +1042,9 @@ isc.OBPickAndExecuteGrid.addProperties({
     }
     if (columnValue.entries) {
       this.setValueMapInEditForm(field.name, columnValue.entries);
+      if (this.isEditing() && columnValue.value) {
+        this.setEditValue(this.getEditRow(), field.name, columnValue.value);
+      }
     } else if (
       field.fkField &&
       columnValue.value &&
